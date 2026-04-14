@@ -21,9 +21,6 @@ import com.smartcampus.app.error.RoomNotEmptyException;
 import com.smartcampus.app.model.Room;
 import com.smartcampus.app.store.CampusData;
 
-/**
- * Coursework name: SensorRoom resource — manages /rooms.
- */
 @Path("rooms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

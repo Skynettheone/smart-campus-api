@@ -6,10 +6,6 @@ import java.util.Scanner;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
-/**
- * Run this class from NetBeans: right-click → Run File (or Run Project).
- * Server base URL is http://localhost:8080 — API lives under /api/v1.
- */
 public final class Main {
 
     public static final String BASE_URL = "http://localhost:8080";

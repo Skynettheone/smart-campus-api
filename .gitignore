@@ -3,3 +3,9 @@
 .idea/
 *.iml
 /nbproject/private/
+.github/java-upgrade/
+.DS_Store
+/logs/
+*.log
+*.tmp
+.vscode/

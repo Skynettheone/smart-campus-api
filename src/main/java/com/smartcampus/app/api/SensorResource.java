@@ -29,9 +29,7 @@ public class SensorResource {
         this.data = data;
     }
 
-    /**
-     * Sub-resource locator — coursework asks for a separate class for readings.
-     */
+    // sub-resource locator for sensor readings
     @Path("{sensorId}/readings")
     public SensorReadingResource readings(@javax.ws.rs.PathParam("sensorId") String sensorId) {
         return new SensorReadingResource(data, sensorId);

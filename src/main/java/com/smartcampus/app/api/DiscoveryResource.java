@@ -12,9 +12,7 @@ import javax.ws.rs.core.MediaType;
 import com.smartcampus.app.Main;
 import com.smartcampus.app.store.CampusData;
 
-/**
- * GET /api/v1 — tells clients what this API is and where collections live.
- */
+// root discovery endpoint
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class DiscoveryResource {

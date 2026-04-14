@@ -9,9 +9,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-/**
- * Last-resort handler so clients never see a Java stack trace in the HTTP body.
- */
+// fallback mapper to avoid stack traces in responses
 public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
 
     private static final Logger LOG = Logger.getLogger(GlobalExceptionMapper.class.getName());

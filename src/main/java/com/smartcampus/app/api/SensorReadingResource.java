@@ -16,9 +16,6 @@ import com.smartcampus.app.error.SensorUnavailableException;
 import com.smartcampus.app.model.SensorReading;
 import com.smartcampus.app.store.CampusData;
 
-/**
- * Handles GET/POST for /sensors/{sensorId}/readings (created by the sub-resource locator).
- */
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorReadingResource {

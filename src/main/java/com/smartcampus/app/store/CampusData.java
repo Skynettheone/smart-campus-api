@@ -15,9 +15,7 @@ import com.smartcampus.app.model.Room;
 import com.smartcampus.app.model.Sensor;
 import com.smartcampus.app.model.SensorReading;
 
-/**
- * Simple in-memory store. Methods are {@code synchronized} so one request * finishes before another changes the maps (good enough for coursework).
- */
+// in-memory store with synchronized methods
 public class CampusData {
 
     private final Map<String, Room> rooms = new HashMap<>();

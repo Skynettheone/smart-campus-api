@@ -12,14 +12,12 @@ import com.smartcampus.app.api.SensorResource;
 import com.smartcampus.app.api.SensorRoomResource;
 import com.smartcampus.app.error.GlobalExceptionMapper;
 import com.smartcampus.app.error.LinkedResourceNotFoundExceptionMapper;
+import com.smartcampus.app.error.NotFoundExceptionMapper;
 import com.smartcampus.app.error.RoomNotEmptyExceptionMapper;
 import com.smartcampus.app.error.SensorUnavailableExceptionMapper;
 import com.smartcampus.app.filter.RequestResponseLoggingFilter;
 import com.smartcampus.app.store.CampusData;
 
-/**
- * {@link ResourceConfig} subclasses {@link javax.ws.rs.core.Application} and works with Grizzly.
- */
 @ApplicationPath("/api/v1")
 public class SmartCampusApplication extends ResourceConfig {
 
@@ -39,6 +37,7 @@ public class SmartCampusApplication extends ResourceConfig {
         register(SensorResource.class);
         register(RoomNotEmptyExceptionMapper.class);
         register(LinkedResourceNotFoundExceptionMapper.class);
+        register(NotFoundExceptionMapper.class);
         register(SensorUnavailableExceptionMapper.class);
         register(GlobalExceptionMapper.class);
         register(RequestResponseLoggingFilter.class);
