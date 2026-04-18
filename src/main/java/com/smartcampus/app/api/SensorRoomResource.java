@@ -13,10 +13,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
-import com.smartcampus.app.Main;
 import com.smartcampus.app.error.RoomNotEmptyException;
 import com.smartcampus.app.model.Room;
 import com.smartcampus.app.store.CampusData;
@@ -39,7 +40,7 @@ public class SensorRoomResource {
     }
 
     @POST
-    public Response create(Room room) {
+    public Response create(Room room, @Context UriInfo uriInfo) {
         try {
             data.addRoom(room);
         } catch (IllegalStateException ex) {
@@ -47,7 +48,7 @@ public class SensorRoomResource {
         } catch (IllegalArgumentException ex) {
             return badRequest(ex.getMessage());
         }
-        URI location = URI.create(Main.BASE_URL + "/api/v1/rooms/" + room.getId());
+        URI location = uriInfo.getAbsolutePathBuilder().path(room.getId()).build();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("message", "Room created");
         body.put("id", room.getId());

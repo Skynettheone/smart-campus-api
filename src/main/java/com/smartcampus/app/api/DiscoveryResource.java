@@ -7,9 +7,10 @@ import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
-import com.smartcampus.app.Main;
 import com.smartcampus.app.store.CampusData;
 
 // root discovery endpoint
@@ -27,8 +28,13 @@ public class DiscoveryResource {
     }
 
     @GET
-    public Map<String, Object> discover() {
-        String base = Main.BASE_URL + "/api/v1";
+    public Map<String, Object> discover(@Context UriInfo uriInfo) {
+        String base = uriInfo.getBaseUri().toString();
+        // remove trailing slash if present
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+
         Map<String, String> links = new LinkedHashMap<>();
         links.put("rooms", base + "/rooms");
         links.put("sensors", base + "/sensors");
