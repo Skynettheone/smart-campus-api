@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>Smart Campus API</name>
-    <description>5COSC022W coursework – JAX-RS Smart Campus REST API</description>
+    <description>5COSC022W coursework - JAX-RS Smart Campus REST API</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

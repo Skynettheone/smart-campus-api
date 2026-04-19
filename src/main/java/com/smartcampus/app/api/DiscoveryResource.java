@@ -44,7 +44,7 @@ public class DiscoveryResource {
         body.put("apiVersion", API_VERSION);
         body.put("adminContact", "smart-campus-support@university.example");
         body.put("_links", links);
-        body.put("note", "In-memory demo store — room count is " + data.listRooms().size());
+        body.put("note", "In-memory demo store - room count is " + data.listRooms().size());
         return body;
     }
 }
