@@ -1,0 +1,542 @@
+{
+	"info": {
+		"_postman_id": "smart-campus-api-collection",
+		"name": "Smart Campus API",
+		"description": "Full Postman collection for the Smart Campus Sensor & Room Management REST API.\n\nBase URL: http://localhost:8080/smart-campus-api/api/v1\n\nBuilt with JAX-RS (Jersey), Java 11, Maven, deployed on Apache Tomcat 9.\n\nClient-Server Architectures Coursework 2025/26 - University of Westminster (5COSC022W)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/smart-campus-api/api/v1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Discovery",
+			"item": [
+				{
+					"name": "GET - API Discovery",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}",
+							"host": ["{{baseUrl}}"]
+						},
+						"description": "Returns API metadata, version, admin contact, and HATEOAS-style _links to the rooms and sensors collections."
+					},
+					"response": []
+				}
+			],
+			"description": "The root discovery endpoint provides API metadata and hypermedia links."
+		},
+		{
+			"name": "Rooms",
+			"item": [
+				{
+					"name": "GET - List All Rooms",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rooms",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms"]
+						},
+						"description": "Returns a JSON array of all rooms currently in the in-memory store."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Create Room",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"LIB-301\",\n    \"name\": \"Library quiet study\",\n    \"capacity\": 40\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rooms",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms"]
+						},
+						"description": "Creates a new room. Returns 201 Created with a Location header pointing to the new resource."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Create Room (ENG-101)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"ENG-101\",\n    \"name\": \"Engineering Lab 1\",\n    \"capacity\": 30\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rooms",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms"]
+						},
+						"description": "Creates a second room to demonstrate multiple rooms in the store."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Create Room (Duplicate - 409)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"LIB-301\",\n    \"name\": \"Duplicate room\",\n    \"capacity\": 10\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rooms",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms"]
+						},
+						"description": "Attempts to create a room with an ID that already exists. Returns 409 Conflict."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Create Room (Missing ID - 400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"No ID room\",\n    \"capacity\": 20\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rooms",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms"]
+						},
+						"description": "Attempts to create a room without an ID. Returns 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Get Room by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rooms/LIB-301",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms", "LIB-301"]
+						},
+						"description": "Retrieves a single room by its ID. Returns 200 OK with the room object, or 404 if not found."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Get Room by ID (Not Found - 404)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rooms/DOES-NOT-EXIST",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms", "DOES-NOT-EXIST"]
+						},
+						"description": "Attempts to retrieve a room that does not exist. Returns 404 Not Found with a JSON error body."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Remove Room (Has Sensors - 409)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rooms/LIB-301",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms", "LIB-301"]
+						},
+						"description": "Attempts to delete a room that still has sensors assigned. Returns 409 Conflict. Run this AFTER registering a sensor to LIB-301."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Remove Room (Success - 204)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rooms/ENG-101",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms", "ENG-101"]
+						},
+						"description": "Deletes a room that has no sensors assigned. Returns 204 No Content."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Remove Room (Not Found - 404)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rooms/DOES-NOT-EXIST",
+							"host": ["{{baseUrl}}"],
+							"path": ["rooms", "DOES-NOT-EXIST"]
+						},
+						"description": "Attempts to delete a room that does not exist. Returns 404 Not Found. Demonstrates DELETE idempotency."
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD operations for campus rooms. Rooms must be empty (no sensors assigned) before they can be deleted."
+		},
+		{
+			"name": "Sensors",
+			"item": [
+				{
+					"name": "GET - List All Sensors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"]
+						},
+						"description": "Returns all registered sensors. No filter applied."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Filter Sensors by Type (CO2)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sensors?type=CO2",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"],
+							"query": [
+								{
+									"key": "type",
+									"value": "CO2"
+								}
+							]
+						},
+						"description": "Returns only sensors matching the given type via @QueryParam. Demonstrates optional query parameter filtering."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Filter Sensors by Type (Temperature)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sensors?type=Temperature",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"],
+							"query": [
+								{
+									"key": "type",
+									"value": "Temperature"
+								}
+							]
+						},
+						"description": "Filters sensors by Temperature type."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Register Sensor (CO2)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"CO2-001\",\n    \"type\": \"CO2\",\n    \"status\": \"ACTIVE\",\n    \"currentValue\": 0,\n    \"roomId\": \"LIB-301\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"]
+						},
+						"description": "Registers a CO2 sensor assigned to room LIB-301. Returns 201 Created. The room must exist first."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Register Sensor (Temperature)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"TEMP-001\",\n    \"type\": \"Temperature\",\n    \"status\": \"ACTIVE\",\n    \"currentValue\": 0,\n    \"roomId\": \"LIB-301\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"]
+						},
+						"description": "Registers a Temperature sensor assigned to room LIB-301."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Register Sensor (MAINTENANCE)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"HUM-001\",\n    \"type\": \"Humidity\",\n    \"status\": \"MAINTENANCE\",\n    \"currentValue\": 0,\n    \"roomId\": \"LIB-301\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"]
+						},
+						"description": "Registers a sensor with MAINTENANCE status. This sensor will reject new readings with 403."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Register Sensor (Invalid roomId - 422)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"TEMP-99\",\n    \"type\": \"Temperature\",\n    \"status\": \"ACTIVE\",\n    \"currentValue\": 0,\n    \"roomId\": \"DOES-NOT-EXIST\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"]
+						},
+						"description": "Attempts to register a sensor with a roomId that does not exist. Returns 422 Unprocessable Entity."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Register Sensor (Duplicate - 409)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"CO2-001\",\n    \"type\": \"CO2\",\n    \"status\": \"ACTIVE\",\n    \"currentValue\": 0,\n    \"roomId\": \"LIB-301\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"]
+						},
+						"description": "Attempts to register a sensor with an ID that already exists. Returns 409 Conflict."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Register Sensor (Wrong Content-Type - 415)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "This is plain text, not JSON"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors"]
+						},
+						"description": "Sends text/plain to an endpoint that @Consumes application/json. Returns 415 Unsupported Media Type."
+					},
+					"response": []
+				}
+			],
+			"description": "Sensor registration and listing. Sensors must reference an existing roomId. Supports optional ?type= query parameter filtering."
+		},
+		{
+			"name": "Sensor Readings",
+			"item": [
+				{
+					"name": "GET - Reading History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sensors/CO2-001/readings",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors", "CO2-001", "readings"]
+						},
+						"description": "Returns the full reading history for sensor CO2-001. Uses the sub-resource locator pattern."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Append Reading",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"value\": 450.5,\n    \"timestamp\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors/CO2-001/readings",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors", "CO2-001", "readings"]
+						},
+						"description": "Appends a new reading to sensor CO2-001. The server auto-generates the reading ID and timestamp (when 0). Also updates the parent sensor's currentValue."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Append Second Reading",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"value\": 520.3,\n    \"timestamp\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors/CO2-001/readings",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors", "CO2-001", "readings"]
+						},
+						"description": "Appends another reading to build up a history. Check that the parent sensor's currentValue is now 520.3."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Reading on MAINTENANCE Sensor (403)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"value\": 65.0,\n    \"timestamp\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors/HUM-001/readings",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors", "HUM-001", "readings"]
+						},
+						"description": "Attempts to post a reading to a sensor in MAINTENANCE status. Returns 403 Forbidden."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Reading on Non-Existent Sensor (404)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"value\": 100.0,\n    \"timestamp\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sensors/FAKE-SENSOR/readings",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors", "FAKE-SENSOR", "readings"]
+						},
+						"description": "Attempts to post a reading to a sensor that does not exist. Returns 404 Not Found."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Reading History (Non-Existent Sensor - 404)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sensors/FAKE-SENSOR/readings",
+							"host": ["{{baseUrl}}"],
+							"path": ["sensors", "FAKE-SENSOR", "readings"]
+						},
+						"description": "Attempts to get reading history for a sensor that does not exist. Returns 404 Not Found."
+					},
+					"response": []
+				}
+			],
+			"description": "Sensor readings are nested under /sensors/{sensorId}/readings using the JAX-RS sub-resource locator pattern. POST appends a reading and updates the parent sensor's currentValue. Sensors in MAINTENANCE status reject new readings with 403."
+		}
+	]
+}
