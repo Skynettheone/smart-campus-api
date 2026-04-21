@@ -48,35 +48,6 @@ flowchart LR
     Tomcat -- "HTTP Response" --> Client
 ```
 
-### Domain Model
-
-The three core entities and their relationships:
-
-```mermaid
-erDiagram
-    ROOM {
-        String id PK
-        String name
-        int capacity
-        List sensorIds FK
-    }
-    SENSOR {
-        String id PK
-        String type
-        String status
-        double currentValue
-        String roomId FK
-    }
-    SENSOR_READING {
-        String id PK
-        long timestamp
-        double value
-    }
-
-    ROOM ||--o{ SENSOR : "contains"
-    SENSOR ||--o{ SENSOR_READING : "produces"
-```
-
 ### API Endpoint Routing Tree
 
 ```mermaid
@@ -113,90 +84,6 @@ flowchart TD
     Sensors --> ReadingsPath
     ReadingsPath --> ReadingsGet
     ReadingsPath --> ReadingsPost
-```
-
-### Request Lifecycle & Error Handling Pipeline
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant F as LoggingFilter
-    participant J as Jersey Runtime
-    participant R as Resource Method
-    participant S as CampusData Store
-    participant E as ExceptionMapper
-
-    C->>F: HTTP Request
-    F->>F: Log method + URI
-    F->>J: Forward request
-    J->>J: Match route, deserialise JSON
-
-    alt Content-Type mismatch
-        J-->>C: 415 Unsupported Media Type
-    end
-
-    J->>R: Invoke resource method
-    R->>S: Read / write data
-
-    alt Success
-        S-->>R: Return data
-        R-->>J: Response (200 / 201 / 204)
-    else Domain exception thrown
-        S-->>R: throws Exception
-        R-->>E: Exception propagates
-        E-->>J: Structured JSON error (404 / 403 / 409 / 422)
-    else Unexpected error
-        R-->>E: GlobalExceptionMapper
-        E-->>J: Generic 500 (no stack trace)
-    end
-
-    J->>F: Response
-    F->>F: Log status code
-    F-->>C: HTTP Response
-```
-
-### Package Structure
-
-```mermaid
-flowchart TD
-    App["SmartCampusApplication\n@ApplicationPath('/api/v1')"]
-
-    subgraph api ["api  —  Resource Classes"]
-        D["DiscoveryResource"]
-        RR["SensorRoomResource"]
-        SR["SensorResource"]
-        SRR["SensorReadingResource\n(sub-resource)"]
-    end
-
-    subgraph model ["model  —  Domain Entities"]
-        Room["Room"]
-        Sensor["Sensor"]
-        Reading["SensorReading"]
-    end
-
-    subgraph store ["store  —  Persistence"]
-        CD["CampusData\n(synchronized in-memory)"]
-    end
-
-    subgraph error ["error  —  Exception Handling"]
-        GEM["GlobalExceptionMapper"]
-        NFEM["NotFoundExceptionMapper"]
-        LRNEM["LinkedResourceNotFound\nExceptionMapper"]
-        RNEEM["RoomNotEmpty\nExceptionMapper"]
-        SUEM["SensorUnavailable\nExceptionMapper"]
-    end
-
-    subgraph filter ["filter  —  Cross-Cutting"]
-        LF["RequestResponse\nLoggingFilter"]
-    end
-
-    App --> api
-    App --> error
-    App --> filter
-    api --> store
-    api --> model
-    store --> model
-    SR -- "sub-resource\nlocator" --> SRR
 ```
 
 ## Build and run
