@@ -20,6 +20,185 @@ This project is a REST API for the Smart Campus scenario: it manages **rooms**, 
 
 Base path: **`/api/v1`**.
 
+## Architecture Overview
+
+### High-Level Request Flow
+
+The diagram below shows how an HTTP request travels from the client through Tomcat and the JAX-RS runtime into the application layer.
+
+```mermaid
+flowchart LR
+    Client(["Client\n(Postman / curl)"])
+    Tomcat["Apache Tomcat 9\n(Servlet Container)"]
+    Filter["RequestResponse\nLoggingFilter"]
+    Jersey["Jersey JAX-RS\nRuntime"]
+    Resources["Resource Classes\n(API Layer)"]
+    Store["CampusData\n(In-Memory Store)"]
+    Mappers["Exception\nMappers"]
+
+    Client -- "HTTP Request" --> Tomcat
+    Tomcat --> Filter
+    Filter --> Jersey
+    Jersey --> Resources
+    Resources --> Store
+    Resources -. "throws" .-> Mappers
+    Mappers -. "JSON error" .-> Jersey
+    Jersey -- "HTTP Response" --> Filter
+    Filter --> Tomcat
+    Tomcat -- "HTTP Response" --> Client
+```
+
+### Domain Model
+
+The three core entities and their relationships:
+
+```mermaid
+erDiagram
+    ROOM {
+        String id PK
+        String name
+        int capacity
+        List sensorIds FK
+    }
+    SENSOR {
+        String id PK
+        String type
+        String status
+        double currentValue
+        String roomId FK
+    }
+    SENSOR_READING {
+        String id PK
+        long timestamp
+        double value
+    }
+
+    ROOM ||--o{ SENSOR : "contains"
+    SENSOR ||--o{ SENSOR_READING : "produces"
+```
+
+### API Endpoint Routing Tree
+
+```mermaid
+flowchart TD
+    Root["/api/v1"]
+    Discovery["GET /\nDiscoveryResource"]
+    Rooms["/rooms\nSensorRoomResource"]
+    Sensors["/sensors\nSensorResource"]
+
+    RoomsList["GET\nList all rooms"]
+    RoomsCreate["POST\nCreate room (201)"]
+    RoomsId["/rooms/:id"]
+    RoomGet["GET\nGet one room"]
+    RoomDel["DELETE\nRemove room (204 / 409)"]
+
+    SensorsList["GET ?type=\nList / filter sensors"]
+    SensorsCreate["POST\nRegister sensor (201 / 422)"]
+    ReadingsPath["/sensors/:sensorId/readings\nSensorReadingResource"]
+    ReadingsGet["GET\nReading history"]
+    ReadingsPost["POST\nAppend reading (201 / 403)"]
+
+    Root --> Discovery
+    Root --> Rooms
+    Root --> Sensors
+
+    Rooms --> RoomsList
+    Rooms --> RoomsCreate
+    Rooms --> RoomsId
+    RoomsId --> RoomGet
+    RoomsId --> RoomDel
+
+    Sensors --> SensorsList
+    Sensors --> SensorsCreate
+    Sensors --> ReadingsPath
+    ReadingsPath --> ReadingsGet
+    ReadingsPath --> ReadingsPost
+```
+
+### Request Lifecycle & Error Handling Pipeline
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant F as LoggingFilter
+    participant J as Jersey Runtime
+    participant R as Resource Method
+    participant S as CampusData Store
+    participant E as ExceptionMapper
+
+    C->>F: HTTP Request
+    F->>F: Log method + URI
+    F->>J: Forward request
+    J->>J: Match route, deserialise JSON
+
+    alt Content-Type mismatch
+        J-->>C: 415 Unsupported Media Type
+    end
+
+    J->>R: Invoke resource method
+    R->>S: Read / write data
+
+    alt Success
+        S-->>R: Return data
+        R-->>J: Response (200 / 201 / 204)
+    else Domain exception thrown
+        S-->>R: throws Exception
+        R-->>E: Exception propagates
+        E-->>J: Structured JSON error (404 / 403 / 409 / 422)
+    else Unexpected error
+        R-->>E: GlobalExceptionMapper
+        E-->>J: Generic 500 (no stack trace)
+    end
+
+    J->>F: Response
+    F->>F: Log status code
+    F-->>C: HTTP Response
+```
+
+### Package Structure
+
+```mermaid
+flowchart TD
+    App["SmartCampusApplication\n@ApplicationPath('/api/v1')"]
+
+    subgraph api ["api  —  Resource Classes"]
+        D["DiscoveryResource"]
+        RR["SensorRoomResource"]
+        SR["SensorResource"]
+        SRR["SensorReadingResource\n(sub-resource)"]
+    end
+
+    subgraph model ["model  —  Domain Entities"]
+        Room["Room"]
+        Sensor["Sensor"]
+        Reading["SensorReading"]
+    end
+
+    subgraph store ["store  —  Persistence"]
+        CD["CampusData\n(synchronized in-memory)"]
+    end
+
+    subgraph error ["error  —  Exception Handling"]
+        GEM["GlobalExceptionMapper"]
+        NFEM["NotFoundExceptionMapper"]
+        LRNEM["LinkedResourceNotFound\nExceptionMapper"]
+        RNEEM["RoomNotEmpty\nExceptionMapper"]
+        SUEM["SensorUnavailable\nExceptionMapper"]
+    end
+
+    subgraph filter ["filter  —  Cross-Cutting"]
+        LF["RequestResponse\nLoggingFilter"]
+    end
+
+    App --> api
+    App --> error
+    App --> filter
+    api --> store
+    api --> model
+    store --> model
+    SR -- "sub-resource\nlocator" --> SRR
+```
+
 ## Build and run
 
 ### Prerequisites
@@ -143,6 +322,25 @@ Query parameters (`?type=CO2`) are superior for filtering because they are **opt
 ### Part 4.1  -  Sub-Resource Locator Pattern Benefits
 
 The sub-resource locator pattern delegates nested paths to dedicated classes, following the **Single Responsibility Principle**. `SensorResource` handles sensor-level operations while `SensorReadingResource` handles reading-specific logic. This avoids a single monolithic controller with dozens of methods, improves readability, and allows each sub-resource to be developed and tested independently. It also naturally mirrors the domain hierarchy (sensors contain readings).
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant J as Jersey Runtime
+    participant SR as SensorResource
+    participant SRR as SensorReadingResource
+    participant S as CampusData
+
+    C->>J: POST /api/v1/sensors/CO2-001/readings
+    J->>SR: Match /sensors/{sensorId}/readings
+    SR->>SR: readings("CO2-001")
+    SR->>SRR: return new SensorReadingResource(data, "CO2-001")
+    J->>SRR: Invoke add(reading)
+    SRR->>S: addReading("CO2-001", reading)
+    S-->>SRR: OK (updates currentValue)
+    SRR-->>J: 201 Created
+    J-->>C: {"message": "Reading stored", "readingId": "..."}
+```
 
 ### Part 5.2 - HTTP 422 vs 404 for Missing References
 
